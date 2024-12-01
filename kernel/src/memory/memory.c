@@ -14,3 +14,15 @@ uint64_t GetMemorySize(EFI_MEMORY_DESCRIPTOR* mMap, uint64_t mMapEntries, uint64
     return totalMemoryBytes;
 }
 
+void* memset(void* ptr, int value, size_t count)
+{
+    uint8_t* u8Ptr = (uint8_t*)ptr;
+
+    for (size_t i = 0; i < count; i++)
+    {
+        u8Ptr[i] = (uint8_t)value;
+    }
+
+    return ptr;
+}
+

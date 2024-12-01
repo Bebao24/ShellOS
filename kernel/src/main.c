@@ -5,6 +5,7 @@
 #include <framebuffer.h>
 #include <console.h>
 #include <memory.h>
+#include <bitmap.h>
 
 void kmain(BootInfo* bootInfo)
 {
@@ -14,7 +15,24 @@ void kmain(BootInfo* bootInfo)
 
     uint64_t mMapEntries = bootInfo->mMapSize / bootInfo->mDescriptorSize;
 
-    printf("Total memory size: %d MB\n", GetMemorySize(bootInfo->mMap, mMapEntries, bootInfo->mDescriptorSize) / 1024 / 1024);
+    uint8_t testBuffer[5];
+    Bitmap testBitmap;
+    testBitmap.Buffer = &testBuffer[0];
+    testBitmap.Size = sizeof(testBuffer);
+
+    memset(testBuffer, 0, sizeof(testBuffer));
+    Bitmap_Set(&testBitmap, 1, true);
+    Bitmap_Set(&testBitmap, 2, true);
+    Bitmap_Set(&testBitmap, 5, true);
+    Bitmap_Set(&testBitmap, 7, true);
+    Bitmap_Set(&testBitmap, 8, true);
+    Bitmap_Set(&testBitmap, 10, true);
+
+    for (int i = 0; i < 20; i++)
+    {
+        printf(Bitmap_Get(&testBitmap, i) ? "true" : "false");
+        putc('\n');
+    }
 
     for (;;)
     {

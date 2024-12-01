@@ -1,5 +1,7 @@
 #pragma once
 #include <stddef.h>
+#include <stdint.h>
+#include <efiMemory.h>
 
 typedef struct
 {
@@ -31,5 +33,8 @@ typedef struct
 {
     GOP_Framebuffer* fb;
     PSF_Font* font;
+    EFI_MEMORY_DESCRIPTOR* mMap;
+    uint64_t mMapSize;
+    uint64_t mDescriptorSize;
 } BootInfo;
 

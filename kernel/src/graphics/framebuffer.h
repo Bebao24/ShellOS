@@ -11,5 +11,6 @@ void fb_ClearScreen(uint32_t color);
 
 void fb_drawChar(uint32_t color, uint32_t x, uint32_t y, char c);
 
-uint32_t fb_getWidth();
+uint32_t fb_GetWidth();
+uint32_t fb_GetHeight();
 

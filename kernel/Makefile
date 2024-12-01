@@ -9,7 +9,7 @@ CFLAGS = -Wall -Wextra \
 	-fshort-wchar -mno-red-zone \
 	-fno-PIC
 
-CFLAGS += -I src/ -I src/graphics
+CFLAGS += -I src/ -I src/graphics -I src/memory
 
 LINKFLAGS = -T linker.ld -static \
 	-Bsymbolic

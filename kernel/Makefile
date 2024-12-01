@@ -4,9 +4,12 @@ override CC = x86_64-elf-gcc
 override LD = x86_64-elf-ld
 
 CFLAGS = -Wall -Wextra \
+	-std=gnu11 \
  	-ffreestanding -nostdlib \
 	-fshort-wchar -mno-red-zone \
 	-fno-PIC
+
+CFLAGS += -I src/ -I src/graphics
 
 LINKFLAGS = -T linker.ld -static \
 	-Bsymbolic

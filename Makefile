@@ -21,7 +21,7 @@ $(BUILD_DIR)/kernel/kernel.bin: always
 	@ $(MAKE) -C kernel
 
 bootloader: $(GNU_EFI)/x86_64/bootloader/main.efi
-$(GNU_EFI)/x86_64/bootloader/main.efi:
+$(GNU_EFI)/x86_64/bootloader/main.efi: always
 	@ $(MAKE) -C gnu-efi
 	@ $(MAKE) -C gnu-efi bootloader
 

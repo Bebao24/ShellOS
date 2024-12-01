@@ -15,6 +15,7 @@ $(BUILD_DIR)/image.hdd: kernel bootloader
 	mcopy -i $@ $(GNU_EFI)/x86_64/bootloader/main.efi ::/EFI/BOOT
 	mcopy -i $@ startup.nsh ::
 	mcopy -i $@ $(BUILD_DIR)/kernel/kernel.bin ::
+	mcopy -i $@ build/default.psf ::
 
 kernel: $(BUILD_DIR)/kernel/kernel.bin
 $(BUILD_DIR)/kernel/kernel.bin: always

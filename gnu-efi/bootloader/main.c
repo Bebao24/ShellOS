@@ -4,6 +4,98 @@
 
 #include <stddef.h>
 
+typedef struct
+{
+	void* BaseAddress;
+	size_t BufferSize;
+	unsigned int width;
+	unsigned int height;
+	unsigned int PixelsPerScanLine;
+} GOP_Framebuffer;
+
+GOP_Framebuffer framebuffer;
+GOP_Framebuffer* InitializeGOP()
+{
+	EFI_GUID gopGuid = EFI_GRAPHICS_OUTPUT_PROTOCOL_GUID;
+	EFI_GRAPHICS_OUTPUT_PROTOCOL* gop;
+	EFI_STATUS status;
+
+	status = uefi_call_wrapper(BS->LocateProtocol, 3, &gopGuid, NULL, (void**)&gop);
+
+	if (EFI_ERROR(status))
+	{
+		Print(L"Failed to locate GOP!\r\n");
+		return NULL;
+	}
+	else
+	{
+		Print(L"GOP located successfully!\r\n");
+	}
+
+	framebuffer.BaseAddress = (void*)gop->Mode->FrameBufferBase;
+	framebuffer.BufferSize = gop->Mode->FrameBufferSize;
+	framebuffer.width = gop->Mode->Info->HorizontalResolution;
+	framebuffer.height = gop->Mode->Info->VerticalResolution;
+	framebuffer.PixelsPerScanLine = gop->Mode->Info->PixelsPerScanLine;
+
+	return &framebuffer;
+}
+
+EFI_FILE* LoadFile(EFI_FILE* Directory, CHAR16* FileName, EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable);
+
+#define PSF_MAGIC_0 0x36
+#define PSF_MAGIC_1 0x04
+
+typedef struct
+{
+    unsigned char magic[2];
+    unsigned char mode;
+    unsigned char charSize;
+} PSF_Header;
+
+typedef struct
+{
+    PSF_Header* fontHeader;
+    void* glyphBuffer;
+} PSF_Font;
+
+PSF_Font* LoadFont(EFI_FILE* Directory, CHAR16* FontName, EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable)
+{
+	EFI_FILE* font = LoadFile(Directory, FontName, ImageHandle, SystemTable);
+	if (font == NULL) return NULL;
+
+	PSF_Header* fontHeader;
+	SystemTable->BootServices->AllocatePool(EfiLoaderData, sizeof(PSF_Header), (void**)&fontHeader);
+
+	UINTN size = sizeof(PSF_Header);
+	font->Read(font, &size, fontHeader);
+
+	// Check if the file is PSF1 font
+	if (fontHeader->magic[0] != PSF_MAGIC_0 || fontHeader->magic[1] != PSF_MAGIC_1)
+	{
+		return NULL;
+	}
+
+	UINTN glyphBufferSize = fontHeader->charSize * 256;
+	if (fontHeader->mode == 1)
+	{
+		glyphBufferSize = fontHeader->charSize * 512;
+	}
+
+	void* glyphBuffer;
+	{
+		font->SetPosition(font, sizeof(PSF_Header));
+		SystemTable->BootServices->AllocatePool(EfiLoaderData, glyphBufferSize, (void**)&glyphBuffer);
+		font->Read(font, &glyphBufferSize, glyphBuffer);
+	}
+
+	PSF_Font* finishedFont;
+	SystemTable->BootServices->AllocatePool(EfiLoaderData, sizeof(PSF_Font), (void**)&finishedFont);
+	finishedFont->fontHeader = fontHeader;
+	finishedFont->glyphBuffer = glyphBuffer;
+	return finishedFont;
+}
+
 EFI_FILE* LoadFile(EFI_FILE* Directory, CHAR16* FileName, EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE* SystemTable)
 {
 	EFI_STATUS status;
@@ -39,6 +131,12 @@ int memcmp(const void* aptr, const void* bptr, size_t n){
 	}
 	return 0;
 }
+
+typedef struct
+{
+	GOP_Framebuffer* fb;
+	PSF_Font* font;
+} BootInfo;
 
 EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 {
@@ -114,10 +212,29 @@ EFI_STATUS efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable)
 
 	Print(L"Kernel loaded successfully!\r\n");
 
-	int (*KernelStart)() = ((__attribute__((sysv_abi)) int (*)()) header.e_entry);
+	GOP_Framebuffer* newBuffer = InitializeGOP();
+	if (newBuffer == NULL)
+	{
+		return EFI_NOT_FOUND;
+	}
 
-	// Print the return code
-	Print(L"kernel return code: %d\n", KernelStart());
+	PSF_Font* newFont = LoadFont(NULL, L"default.psf", ImageHandle, SystemTable);
+	if (newFont == NULL)
+	{
+		Print(L"Font not found!\r\n");
+		return EFI_INVALID_PARAMETER;
+	}
+	else
+	{
+		Print(L"Font found! char size = %d\r\n", newFont->fontHeader->charSize);
+	}
+
+	void (*KernelStart)(BootInfo*) = ((__attribute__((sysv_abi)) void (*)(BootInfo*)) header.e_entry);
+
+	BootInfo bootInfo;
+	bootInfo.fb = newBuffer;
+	bootInfo.font = newFont;
+	KernelStart(&bootInfo);
 
 	return EFI_SUCCESS;
 }

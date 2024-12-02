@@ -5,7 +5,11 @@
 #include <framebuffer.h>
 #include <console.h>
 #include <memory.h>
-#include <bitmap.h>
+#include <pmm.h>
+
+/* These are from linker.ld */
+extern uint64_t _KernelStart;
+extern uint64_t _KernelEnd;
 
 void kmain(BootInfo* bootInfo)
 {
@@ -15,24 +19,24 @@ void kmain(BootInfo* bootInfo)
 
     uint64_t mMapEntries = bootInfo->mMapSize / bootInfo->mDescriptorSize;
 
-    uint8_t testBuffer[5];
-    Bitmap testBitmap;
-    testBitmap.Buffer = &testBuffer[0];
-    testBitmap.Size = sizeof(testBuffer);
+    InitializePMM(bootInfo->mMap, bootInfo->mMapSize, bootInfo->mDescriptorSize);
 
-    memset(testBuffer, 0, sizeof(testBuffer));
-    Bitmap_Set(&testBitmap, 1, true);
-    Bitmap_Set(&testBitmap, 2, true);
-    Bitmap_Set(&testBitmap, 5, true);
-    Bitmap_Set(&testBitmap, 7, true);
-    Bitmap_Set(&testBitmap, 8, true);
-    Bitmap_Set(&testBitmap, 10, true);
+    uint64_t kernelSize = (uint64_t)&_KernelEnd - (uint64_t)&_KernelStart;
+    uint64_t kernelPages = kernelSize / 0x1000 + 1;
 
-    for (int i = 0; i < 20; i++)
+    pmm_LockPages(&_KernelStart, kernelPages);
+
+    printf("Free RAM: %llu KB\n", pmm_GetFreeRAM() / 1024);
+    printf("Used RAM: %llu KB\n", pmm_GetUsedRAM() / 1024);
+    printf("Reserved RAM: %llu KB\n", pmm_GetReservedRAM() / 1024);
+
+    for (int i = 0; i < 10; i++)
     {
-        printf(Bitmap_Get(&testBitmap, i) ? "true" : "false");
-        putc('\n');
+        void* address = pmm_AllocatePage();
+        printf("address: %llx\n", (uint64_t)address);
     }
+
+    printf("Hello World!\n");
 
     for (;;)
     {

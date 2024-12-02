@@ -5,7 +5,7 @@
 GOP_Framebuffer* fb = NULL;
 PSF_Font* font = NULL;
 
-bool initialize = false;
+static bool initialize = false;
 
 void fb_Initialize(GOP_Framebuffer* framebuffer, PSF_Font* PSFfont)
 {

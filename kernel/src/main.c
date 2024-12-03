@@ -6,6 +6,7 @@
 #include <console.h>
 #include <memory.h>
 #include <pmm.h>
+#include <paging.h>
 
 /* These are from linker.ld */
 extern uint64_t _KernelStart;
@@ -26,17 +27,36 @@ void kmain(BootInfo* bootInfo)
 
     pmm_LockPages(&_KernelStart, kernelPages);
 
-    printf("Free RAM: %llu KB\n", pmm_GetFreeRAM() / 1024);
-    printf("Used RAM: %llu KB\n", pmm_GetUsedRAM() / 1024);
-    printf("Reserved RAM: %llu KB\n", pmm_GetReservedRAM() / 1024);
+    PageTable* PML4 = (PageTable*)pmm_AllocatePage();
+    memset(PML4, 0, 0x1000);
 
-    for (int i = 0; i < 10; i++)
+    InitializePaging(PML4);
+
+    // Identity mapping all the physical address
+    for (uint64_t i = 0; i < GetMemorySize(bootInfo->mMap, mMapEntries, bootInfo->mDescriptorSize); i += 0x1000)
     {
-        void* address = pmm_AllocatePage();
-        printf("address: %llx\n", (uint64_t)address);
+        paging_MapMemory((void*)i, (void*)i);
     }
 
+    // Identity mapping the GOP framebuffer
+    uint64_t fbBase = (uint64_t)bootInfo->fb->BaseAddress;
+    uint64_t fbSize = (uint64_t)bootInfo->fb->BufferSize + 0x1000;
+
+    for (uint64_t i = fbBase; i < fbBase + fbSize; i += 0x1000)
+    {
+        paging_MapMemory((void*)i, (void*)i);
+    }
+
+    // Pass the new page to the CPU
+    asm volatile("mov %0, %%cr3" : : "r"(PML4));
+
     printf("Hello World!\n");
+
+    paging_MapMemory((void*)0x600000000, pmm_AllocatePage());
+    uint8_t* test = 0x600000000;
+    *test = 69;
+
+    printf("%d\n", *test);
 
     for (;;)
     {

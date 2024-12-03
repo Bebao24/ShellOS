@@ -64,13 +64,14 @@ void InitializePMM(EFI_MEMORY_DESCRIPTOR* mMap, size_t mMapSize, size_t mDescrip
     pmm_LockPages(g_Bitmap.Buffer, g_Bitmap.Size / 0x1000 + 1);
 }
 
+uint64_t pageBitmapIndex = 0;
 void* pmm_AllocatePage()
 {
-    for (uint64_t i = 0; i < g_Bitmap.Size * 8; i++)
+    for (; pageBitmapIndex < g_Bitmap.Size * 8; pageBitmapIndex++)
     {
-        if (Bitmap_Get(&g_Bitmap, i) == true) continue;
-        pmm_LockPage((void*)(i * 0x1000));
-        return (void*)(i * 0x1000);
+        if (Bitmap_Get(&g_Bitmap, pageBitmapIndex) == true) continue;
+        pmm_LockPage((void*)(pageBitmapIndex * 0x1000));
+        return (void*)(pageBitmapIndex * 0x1000);
     }
 
     return NULL; // Ran out of memory
@@ -92,6 +93,11 @@ void pmm_FreePage(void* address)
     Bitmap_Set(&g_Bitmap, index, false);
     freeMemory += 0x1000;
     usedMemory -= 0x1000;
+
+    if (pageBitmapIndex > index)
+    {
+        pageBitmapIndex = index;
+    }
 }
 
 void pmm_LockPage(void* address)

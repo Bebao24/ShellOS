@@ -52,11 +52,11 @@ void kmain(BootInfo* bootInfo)
 
     printf("Hello World!\n");
 
-    paging_MapMemory((void*)0x600000000, pmm_AllocatePage());
-    uint8_t* test = 0x600000000;
-    *test = 69;
-
-    printf("%d\n", *test);
+    for (int i = 0; i < 10; i++)
+    {
+        void* addr = pmm_AllocatePage();
+        printf("Address: %llx\n", (uint64_t)addr);
+    }
 
     for (;;)
     {

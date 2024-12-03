@@ -7,6 +7,7 @@
 #include <memory.h>
 #include <pmm.h>
 #include <paging.h>
+#include <gdt.h>
 
 /* These are from linker.ld */
 extern uint64_t _KernelStart;
@@ -50,13 +51,8 @@ void kmain(BootInfo* bootInfo)
     // Pass the new page to the CPU
     asm volatile("mov %0, %%cr3" : : "r"(PML4));
 
+    InitializeGDT();
     printf("Hello World!\n");
-
-    for (int i = 0; i < 10; i++)
-    {
-        void* addr = pmm_AllocatePage();
-        printf("Address: %llx\n", (uint64_t)addr);
-    }
 
     for (;;)
     {

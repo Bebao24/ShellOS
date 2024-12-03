@@ -2,6 +2,7 @@ OUTPUT = kernel.bin
 
 override CC = x86_64-elf-gcc
 override LD = x86_64-elf-ld
+override ASM = nasm
 
 CFLAGS = -Wall -Wextra \
 	-std=gnu11 \
@@ -9,12 +10,14 @@ CFLAGS = -Wall -Wextra \
 	-fshort-wchar -mno-red-zone \
 	-fno-PIC
 
-CFLAGS += -I src/ -I src/graphics -I src/memory
+CFLAGS += -I src/ -I src/graphics -I src/memory -I src/arch/x86_64 -I src/arch/x86_64/cpu
 
 LINKFLAGS = -T linker.ld -static \
 	-Bsymbolic
 
 LIBS = -lgcc
+
+ASMFLAGS = -f elf64
 
 BUILD_DIR = ../bin
 
@@ -24,14 +27,23 @@ all: kernel
 
 C_SOURCES := $(shell find src -type f -name "*.c")
 C_OBJECTS := $(patsubst src/%.c, $(BUILD_DIR)/kernel/x86_64/%.o, $(C_SOURCES))
+ASM_SOURCES := $(shell find src -type f -name "*.asm")
+ASM_OBJECTS := $(patsubst src/%.asm, $(BUILD_DIR)/kernel/x86_64/%_asm.o, $(ASM_SOURCES))
 
 C_HEADERS := $(shell find src -type f -name "*.h")
+ASM_HEADERS := $(shell find src -type f -name "*.inc")
 
 kernel: $(BUILD_DIR)/kernel/$(OUTPUT)
 
-$(BUILD_DIR)/kernel/$(OUTPUT): $(C_OBJECTS)
+$(BUILD_DIR)/kernel/$(OUTPUT): $(C_OBJECTS) $(ASM_OBJECTS)
 	$(LD) $(LINKFLAGS) -o $(BUILD_DIR)/kernel/$(OUTPUT) $^
 
 $(BUILD_DIR)/kernel/x86_64/%.o: src/%.c $(C_HEADERS)
 	@ mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c -o $@ $<
+
+$(BUILD_DIR)/kernel/x86_64/%_asm.o: src/%.asm $(ASM_HEADERS)
+	@ mkdir -p $(dir $@)
+	$(ASM) $(ASMFLAGS) -o $@ $<
+
+

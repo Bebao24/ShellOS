@@ -9,6 +9,7 @@
 #include <paging.h>
 #include <gdt.h>
 #include <idt.h>
+#include <interrupts.h>
 
 /* These are from linker.ld */
 extern uint64_t _KernelStart;
@@ -55,6 +56,12 @@ void kmain(BootInfo* bootInfo)
     InitializeGDT();
 
     InitializeIDT();
+    InitializeISR();
+
+    IDT_SetGate(0x0E, (uint64_t)PageFault_Handler, IDT_TA_InterruptGate);
+    IDT_SetGate(0x08, (uint64_t)DoubleFault_Handler, IDT_TA_InterruptGate);
+    IDT_SetGate(0xD, (uint64_t)GF_Handler, IDT_TA_InterruptGate);
+    IDT_SetGate(0x00, (uint64_t)DE_Handler, IDT_TA_InterruptGate);
 
     printf("Hello World!\n");
 

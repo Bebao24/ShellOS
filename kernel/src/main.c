@@ -8,6 +8,7 @@
 #include <pmm.h>
 #include <paging.h>
 #include <gdt.h>
+#include <idt.h>
 
 /* These are from linker.ld */
 extern uint64_t _KernelStart;
@@ -52,6 +53,9 @@ void kmain(BootInfo* bootInfo)
     asm volatile("mov %0, %%cr3" : : "r"(PML4));
 
     InitializeGDT();
+
+    InitializeIDT();
+
     printf("Hello World!\n");
 
     for (;;)

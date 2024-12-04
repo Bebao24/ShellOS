@@ -17,5 +17,8 @@ void __attribute__((Interrupt)) DoubleFault_Handler(interrupt_frame64* frame);
 void __attribute__((interrupt)) GF_Handler(interrupt_frame64* frame);
 void __attribute__((interrupt)) DE_Handler(interrupt_frame64* frame);
 
+void __attribute__((interrupt)) Keyboard_Handler(interrupt_frame64* frame);
+
 void InitializeISR();
+void InitializeIRQ();
 

@@ -10,7 +10,7 @@ CFLAGS = -Wall -Wextra \
 	-fshort-wchar -mno-red-zone \
 	-fno-PIC
 
-INCLUDE_PATHS = -I src/ -I src/graphics -I src/memory -I src/arch/x86_64 -I src/arch/x86_64/cpu
+INCLUDE_PATHS = -I src/ -I src/graphics -I src/memory -I src/arch/x86_64 -I src/arch/x86_64/cpu -I src/arch/x86_64/io
 
 LINKFLAGS = -T linker.ld -static \
 	-Bsymbolic

@@ -11,7 +11,7 @@ CFLAGS = -Wall -Wextra \
 	-fno-PIC
 
 INCLUDE_PATHS = -I src/ -I src/graphics -I src/memory -I src/arch/x86_64 -I src/arch/x86_64/cpu -I src/arch/x86_64/io \
-				-I src/input -I src/drivers -I src/drivers/input
+				-I src/input -I src/drivers -I src/drivers/input -I src/shell
 
 LINKFLAGS = -T linker.ld -static \
 	-Bsymbolic

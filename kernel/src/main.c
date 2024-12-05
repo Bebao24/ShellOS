@@ -12,6 +12,7 @@
 #include <interrupts.h>
 #include <pic.h>
 #include <input.h>
+#include <shell.h>
 
 #define PIC_REMAP_OFFSET 0x20
 
@@ -74,17 +75,7 @@ void kmain(BootInfo* bootInfo)
 
     InitializeKeyboard();
 
-    while (true)
-    {
-        char key = get_key();
-
-        if (key == '\r')
-        {
-            putc('\n');
-        }
-
-        putc(key);
-    }
+    start_shell(bootInfo);
 
     for (;;)
     {

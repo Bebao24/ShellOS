@@ -11,6 +11,7 @@
 #include <idt.h>
 #include <interrupts.h>
 #include <pic.h>
+#include <input.h>
 
 #define PIC_REMAP_OFFSET 0x20
 
@@ -71,7 +72,19 @@ void kmain(BootInfo* bootInfo)
     InitializeIRQ();
     PIC_Unmask(1); // Unmask the keyboard interrupt
 
-    printf("Hello World!\n");
+    InitializeKeyboard();
+
+    while (true)
+    {
+        char key = get_key();
+
+        if (key == '\r')
+        {
+            putc('\n');
+        }
+
+        putc(key);
+    }
 
     for (;;)
     {

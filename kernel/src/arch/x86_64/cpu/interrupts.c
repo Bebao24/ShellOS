@@ -4,6 +4,7 @@
 #include <system.h>
 #include <pic.h>
 #include <io.h>
+#include <keyboard/keyboard.h>
 
 #define UNUSED(x) ((void)x) // Prevent from GCC warning
 
@@ -47,10 +48,7 @@ void __attribute__((interrupt)) Keyboard_Handler(interrupt_frame64* frame)
 {
     UNUSED(frame);
 
-    uint8_t scancode = x64_inb(0x60);
-    UNUSED(scancode);
-
-    printf("Key pressed");
+    HandleKeyboard();
 
     PIC_SendEOI(1);
 }

@@ -13,8 +13,10 @@
 #include <pic.h>
 #include <input.h>
 #include <shell.h>
+#include <malloc.h>
 
 #define PIC_REMAP_OFFSET 0x20
+#define HEAP_ADDRESS ((void*)0x0000100000000000)
 
 /* These are from linker.ld */
 extern uint64_t _KernelStart;
@@ -74,6 +76,15 @@ void kmain(BootInfo* bootInfo)
     PIC_Unmask(1); // Unmask the keyboard interrupt
 
     InitializeKeyboard();
+
+    InitializeHeap(HEAP_ADDRESS, 0x10);
+
+    void* addr = malloc(0x100);
+    printf("malloc addr: 0x%llx\n", (uint64_t)addr);
+    free(addr);
+    printf("malloc addr: 0x%llx\n", (uint64_t)malloc(0x100));
+    printf("malloc addr: 0x%llx\n", (uint64_t)malloc(0x100));
+    
 
     start_shell(bootInfo);
 
